@@ -71,8 +71,6 @@ open class ListOperationsBenchmark {
             sum += list
                 .map { it * 2 }
                 .filter { it > 0 }
-                .map { it + 1 }
-                .filter { it % 2 == 1 }
                 .sumOf { it + 3 }
         }
         blackhole.consume(sum)
