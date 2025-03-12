@@ -54,6 +54,37 @@ open class Benchmark {
         blackhole.consume(result)
     }
 
+    // Real-world scenario
+    @Benchmark
+    fun listRealWorld(blackhole: Blackhole, state: ListState) {
+        val baseValue = 75
+        val result = state.list
+            .map { it + baseValue }
+            .map { it * 3 }
+            .filter { (it and 1) == 0 }
+            .map { it.toString() }
+            .map { it.length }
+            .filter { it > 1 }
+            .sumOf { it + 1 }
+        blackhole.consume(result)
+    }
+
+    /*
+    // Real-world scenario
+    @Benchmark
+    fun sequenceRealWorld(blackhole: Blackhole, state: SequenceState) {
+        val baseValue = 75
+        val result = state.sequence
+            .map { it + baseValue }
+            .map { it * 3 }
+            .filter { (it and 1) == 0 }
+            .map { it.toString() }
+            .map { it.length }
+            .sum()
+        blackhole.consume(result)
+    }
+     */
+
     @State(Scope.Thread)
     open class ListState {
         @Param("default", "vararg")
