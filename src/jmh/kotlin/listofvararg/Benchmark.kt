@@ -38,9 +38,20 @@ open class Benchmark {
 
     // First element benchmark
     @Benchmark
-    fun defaultListOfSingleFirstElement(blackhole: Blackhole, state: ListState) {
+    fun listFirst(blackhole: Blackhole, state: ListState) {
         val first = state.list.first()
         blackhole.consume(first)
+    }
+
+    // Chain of transformations
+    @Benchmark
+    fun listChain(blackhole: Blackhole, state: ListState) {
+        val result = state.list
+            .map { it * 3 }
+            .filter { (it and 1) == 0 }
+            .map { it + 7 }
+            .firstOrNull()
+        blackhole.consume(result)
     }
 
     @State(Scope.Thread)
