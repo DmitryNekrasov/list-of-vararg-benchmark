@@ -6,11 +6,14 @@ import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Measurement
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
@@ -31,5 +34,30 @@ open class Benchmark {
     fun listOfVarargCreation(blackhole: Blackhole) {
         val list = listOfVararg(1)
         blackhole.consume(list)
+    }
+
+    // First element benchmark
+    @Benchmark
+    fun defaultListOfSingleFirstElement(blackhole: Blackhole, state: ListState) {
+        val first = state.list.first()
+        blackhole.consume(first)
+    }
+
+    @State(Scope.Thread)
+    open class ListState {
+        @Param("default", "vararg")
+        private lateinit var type: String
+
+        lateinit var list: List<Int>
+
+        @Setup
+        fun setup() {
+            val element = Random.nextInt()
+            list = when (type) {
+                "default" -> listOf(element)
+                "vararg" -> listOfVararg(element)
+                else -> throw IllegalArgumentException("Unknown list type: $type")
+            }
+        }
     }
 }
