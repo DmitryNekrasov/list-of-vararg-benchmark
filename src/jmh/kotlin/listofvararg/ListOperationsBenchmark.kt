@@ -63,6 +63,21 @@ open class ListOperationsBenchmark {
         blackhole.consume(result)
     }
 
+    // Polymorphic call site benchmark
+    @Benchmark
+    fun polymorphicCallSite(blackhole: Blackhole, state: PolymorphicState) {
+        var sum = 0
+        for (list in state.lists) {
+            sum += list
+                .map { it * 2 }
+                .filter { it > 0 }
+                .map { it + 1 }
+                .filter { it % 2 == 1 }
+                .sumOf { it + 3 }
+        }
+        blackhole.consume(sum)
+    }
+
     @State(Scope.Thread)
     open class CreationState {
         @Param("1", "10", "1000", "1000000")
@@ -83,6 +98,28 @@ open class ListOperationsBenchmark {
                 "default" -> listOf(element)
                 "vararg" -> listOfVararg(element)
                 else -> throw IllegalArgumentException("Unknown list type: $type")
+            }
+        }
+    }
+
+    @State(Scope.Thread)
+    open class PolymorphicState {
+        @Param("default_only", "vararg_only", "mixed")
+        private lateinit var scenario: String
+
+        private val elements = List(100) { RANDOM.nextInt(0, 1_000_000) * 2 + 1 }
+        lateinit var lists: List<List<Int>>
+
+        @Setup
+        fun setup() {
+            lists = when (scenario) {
+                "default_only" -> elements.map { listOf(it) }
+                "vararg_only" -> elements.map { listOfVararg(it) }
+                "mixed" -> elements.mapIndexed { index, value ->
+                    if (index % 2 == 0) listOf(value) else listOfVararg(value)
+                }
+
+                else -> throw IllegalArgumentException("Unknown scenario: $scenario")
             }
         }
     }
