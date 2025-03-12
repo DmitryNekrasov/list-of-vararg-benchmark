@@ -15,15 +15,19 @@ open class ListOperationsBenchmark {
 
     // Basic creation benchmarks
     @Benchmark
-    fun defaultListOfSingleCreation(blackhole: Blackhole) {
-        val list = listOf(1)
-        blackhole.consume(list)
+    fun defaultListOfSingleCreation(blackhole: Blackhole, state: CreationState) {
+        repeat(state.count) {
+            val list = listOf(1)
+            blackhole.consume(list)
+        }
     }
 
     @Benchmark
-    fun listOfVarargCreation(blackhole: Blackhole) {
-        val list = listOfVararg(1)
-        blackhole.consume(list)
+    fun listOfVarargCreation(blackhole: Blackhole, state: CreationState) {
+        repeat(state.count) {
+            val list = listOfVararg(1)
+            blackhole.consume(list)
+        }
     }
 
     // First element benchmark
@@ -38,7 +42,7 @@ open class ListOperationsBenchmark {
     fun listChain(blackhole: Blackhole, state: ListState) {
         val result = state.list
             .map { it * 3 }
-            .filter { (it and 1) == 0 }
+            .filter { (it and 1) == 1 }
             .map { it + 7 }
             .firstOrNull()
         blackhole.consume(result)
@@ -47,16 +51,22 @@ open class ListOperationsBenchmark {
     // Real-world scenario
     @Benchmark
     fun listRealWorld(blackhole: Blackhole, state: ListState) {
-        val baseValue = 75
+        val baseValue = 78
         val result = state.list
             .map { it + baseValue }
             .map { it * 3 }
-            .filter { (it and 1) == 0 }
+            .filter { (it and 1) == 1 }
             .map { it.toString() }
+            .filter { it.isNotEmpty() }
             .map { it.length }
-            .filter { it > 1 }
-            .sumOf { it + 1 }
+            .sumOf { it * 2 }
         blackhole.consume(result)
+    }
+
+    @State(Scope.Thread)
+    open class CreationState {
+        @Param("1", "10", "1000", "1000000")
+        var count: Int = 0
     }
 
     @State(Scope.Thread)
@@ -68,12 +78,16 @@ open class ListOperationsBenchmark {
 
         @Setup
         fun setup() {
-            val element = Random.nextInt()
+            val element = RANDOM.nextInt(0, 1_000_000) * 2 + 1
             list = when (type) {
                 "default" -> listOf(element)
                 "vararg" -> listOfVararg(element)
                 else -> throw IllegalArgumentException("Unknown list type: $type")
             }
         }
+    }
+
+    companion object {
+        val RANDOM = Random(0xcafebabe)
     }
 }
