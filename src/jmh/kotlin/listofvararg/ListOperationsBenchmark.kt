@@ -7,7 +7,7 @@ import kotlin.random.Random
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Fork(2)
 @Warmup(iterations = 10, time = 1)
 @Measurement(iterations = 5, time = 1)
